@@ -356,10 +356,19 @@ public final class TienLenEngine {
     private var previousRoundWinnerID: UUID?
     public private(set) var state = TienLenRoundState()
 
-    public init(humanPlayerID: UUID = UUID(), aiNames: [String] = ["Lan", "Minh", "Khoa"]) {
-        self.humanPlayerID = humanPlayerID
-        self.playerRoster = [(humanPlayerID, "You")] + aiNames.map { (UUID(), $0) }
+    public init(playerNames: [String] = ["You", "Lan", "Minh", "Khoa"], humanPlayerIndex: Int = 0) {
+        precondition(!playerNames.isEmpty, "TienLenEngine requires at least one player.")
+        precondition(playerNames.indices.contains(humanPlayerIndex), "humanPlayerIndex must reference an existing player.")
+
+        let roster = playerNames.map { (UUID(), $0) }
+        self.humanPlayerID = roster[humanPlayerIndex].0
+        self.playerRoster = roster
         startNewRound()
+    }
+
+    public convenience init(humanPlayerID: UUID = UUID(), aiNames: [String] = ["Lan", "Minh", "Khoa"]) {
+        let playerNames = ["You"] + aiNames
+        self.init(playerNames: playerNames, humanPlayerIndex: 0)
     }
 
     public func startNewRound() {

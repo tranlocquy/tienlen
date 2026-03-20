@@ -58,6 +58,13 @@ final class TienLenCoreTests: XCTestCase {
         XCTAssertTrue(candidates.contains { $0.combo.kind == .doubleSequence && $0.combo.cardCount == 6 })
     }
 
+    func testPlayerNamesInitializerSetsHumanPlayerIndex() {
+        let engine = TienLenEngine(playerNames: ["Alpha", "Bravo", "Charlie", "Delta"], humanPlayerIndex: 2)
+
+        XCTAssertEqual(engine.state.players.map(\.name), ["Alpha", "Bravo", "Charlie", "Delta"])
+        XCTAssertEqual(engine.humanPlayerID, engine.state.players[2].id)
+    }
+
     func testOpeningPlayMustContainThreeOfSpades() {
         let humanID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
         let engine = TienLenEngine(humanPlayerID: humanID, aiNames: ["A", "B", "C"])
