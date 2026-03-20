@@ -41,7 +41,7 @@ struct ContentView: View {
             Text("Vietnamese climbing card game")
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.9))
-            Text("Beat the active combination, empty your hand first, and manage passes carefully.")
+            Text("Play singles or combinations, climb by type and strength, and use bombs to crack powerful twos.")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.75))
         }
@@ -178,10 +178,10 @@ struct ContentView: View {
 
     private var ruleNotes: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Prototype rules")
+            Text("Wikipedia rule highlights")
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text("• Supports singles, pairs, triples, quads, and 3+ card straights.\n• Twos are highest rank and cannot appear inside straights.\n• The table resets after everyone else passes.\n• Special Tien Len cuts are not implemented in this prototype.")
+            Text("• Supports singles, pairs, triples, quads, straights, and double sequences of 3+ pairs.\n• Twos rank highest and cannot be used inside straights or double sequences here.\n• A single 2 can be bombed by any quad or a 3+ pair double sequence.\n• A pair of 2s can be bombed by any quad or a 4+ pair double sequence.\n• A triple of 2s can be bombed by a 5+ pair double sequence.\n• The opening leader must include the 3♠, and the table resets after everyone else passes.")
                 .font(.footnote)
                 .foregroundStyle(.white.opacity(0.8))
         }
