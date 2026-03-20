@@ -16,6 +16,7 @@ struct ContentView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         header
+                        modePicker
                         playerOverview
                         currentTrickPanel
                         handSection
@@ -38,11 +39,40 @@ struct ContentView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Vietnamese climbing card game")
+            Text(game.mode == .singlePlayer ? "Vietnamese climbing card game" : "Local multiplayer pass-and-play")
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.9))
-            Text("Play singles or combinations, climb by type and strength, and use bombs to crack powerful twos.")
-                .font(.subheadline)
+            Text(
+                game.mode == .singlePlayer
+                ? "Play against three AI opponents, climb by type and strength, and use bombs to crack powerful twos."
+                : "Four players share one device. Finish a turn, pass the phone, and reveal the next hand when the next player is ready."
+            )
+            .font(.subheadline)
+            .foregroundStyle(.white.opacity(0.75))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var modePicker: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Mode")
+                .font(.headline)
+                .foregroundStyle(.white)
+
+            Picker("Mode", selection: Binding(
+                get: { game.mode },
+                set: { game.setMode($0) }
+            )) {
+                ForEach(TienLenGameMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Text(game.mode.description)
+                .font(.footnote)
                 .foregroundStyle(.white.opacity(0.75))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -65,6 +95,13 @@ struct ContentView: View {
                                     .padding(.vertical, 2)
                                     .background(.yellow.opacity(0.85), in: Capsule())
                             }
+                            if player.id == game.visiblePlayerID {
+                                Text("VISIBLE")
+                                    .font(.caption2.bold())
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(.blue.opacity(0.8), in: Capsule())
+                            }
                             if player.hasPassed {
                                 Text("PASSED")
                                     .font(.caption2.bold())
@@ -73,7 +110,7 @@ struct ContentView: View {
                                     .background(.white.opacity(0.15), in: Capsule())
                             }
                         }
-                        Text(player.id == game.humanPlayerID ? player.hand.map(\.displayText).joined(separator: "  ") : "Cards left: \(player.hand.count)")
+                        Text(cardsText(for: player))
                             .font(.subheadline.monospaced())
                             .foregroundStyle(.white.opacity(0.75))
                             .lineLimit(2)
@@ -88,6 +125,13 @@ struct ContentView: View {
                 .background(player.id == game.currentPlayerID ? .white.opacity(0.18) : .black.opacity(0.18), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
         }
+    }
+
+    private func cardsText(for player: Player) -> String {
+        if player.id == game.visiblePlayerID {
+            return player.hand.map(\.displayText).joined(separator: "  ")
+        }
+        return "Cards left: \(player.hand.count)"
     }
 
     private var currentTrickPanel: some View {
@@ -120,30 +164,56 @@ struct ContentView: View {
 
     private var handSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your Hand")
-                .font(.headline)
-                .foregroundStyle(.white)
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(game.handTitle)
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                    Text(game.handSubtitle)
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.75))
+                }
+                Spacer()
+            }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                ForEach(game.humanHand) { card in
-                    Button {
-                        game.toggleSelection(for: card)
-                    } label: {
-                        VStack(spacing: 8) {
-                            Text(card.rank.label)
-                                .font(.title3.bold())
-                            Text(card.suit.symbol)
-                                .font(.title2)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 72)
-                        .foregroundStyle(card.suit.color)
-                        .background(game.isSelected(card) ? Color.white : Color.white.opacity(0.88), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(game.isSelected(card) ? Color.yellow : Color.clear, lineWidth: 3)
-                        )
+            if game.isAwaitingTurnReveal {
+                VStack(spacing: 12) {
+                    Text("Pass the device to \(game.currentPlayerName).")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                    Text("When ready, reveal only this player's cards.")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.75))
+                    Button("Reveal Hand") {
+                        game.revealCurrentTurn()
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(ActionButtonStyle(background: .yellow, foreground: .black))
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            } else {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
+                    ForEach(game.visibleHand) { card in
+                        Button {
+                            game.toggleSelection(for: card)
+                        } label: {
+                            VStack(spacing: 8) {
+                                Text(card.rank.label)
+                                    .font(.title3.bold())
+                                Text(card.suit.symbol)
+                                    .font(.title2)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 72)
+                            .foregroundStyle(card.suit.color)
+                            .background(game.isSelected(card) ? Color.white : Color.white.opacity(0.88), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(game.isSelected(card) ? Color.yellow : Color.clear, lineWidth: 3)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
         }
@@ -156,11 +226,13 @@ struct ContentView: View {
                     game.playSelectedCards()
                 }
                 .buttonStyle(ActionButtonStyle(background: .yellow, foreground: .black))
+                .disabled(game.isAwaitingTurnReveal)
 
                 Button("Pass") {
                     game.humanPass()
                 }
                 .buttonStyle(ActionButtonStyle(background: .white.opacity(0.15), foreground: .white))
+                .disabled(game.isAwaitingTurnReveal)
 
                 Button("New Round") {
                     game.startNewRound()

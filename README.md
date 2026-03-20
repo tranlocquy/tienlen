@@ -17,14 +17,15 @@ This prototype now covers the main rule structure described on Wikipedia's **Tiá
 - If a player is dealt all four 2s, the round ends immediately with an automatic win.
 
 ## What is included
-- A playable local four-player round with one human player and three AI opponents.
+- A playable solo round with one human player and three AI opponents.
+- A local four-player pass-and-play multiplayer mode on a single device.
 - Core rule validation shared by the SwiftUI app and the `TienLenCore` Swift package.
 - Turn rotation, pass/reset flow, opening-card enforcement using the 3â™ , and Wikipedia-style bomb handling for twos.
 - A small `Swift Package` target (`TienLenCore`) so the rule engine can be tested with `swift test` in CLI environments.
 
 ## Prototype limitations
 - The AI still uses a simple lowest-valid-play strategy and does not reason strategically about preserving bombs.
-- Local multiplayer, scoring across rounds, and trading variants are not implemented.
+- Scoring across rounds and trading variants are not implemented.
 - App icon assets are placeholders.
 
 ## Opening in Xcode
